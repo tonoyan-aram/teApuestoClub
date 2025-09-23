@@ -1,0 +1,1 @@
+ /Users/lusinekhachatryan/projects/vahe/teApuestoClub/.dart_tool/flutter_build/f4c30a12b81404b7b401fc2380a0478c/dart_build_result.json: 
