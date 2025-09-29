@@ -47,6 +47,18 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final Uuid _uuid = const Uuid();
   final NotificationService _notificationService = NotificationService(); // Notification service instance
 
+  Future<bool> _checkImageExists(String imageUrl) async {
+    try {
+      if (imageUrl.startsWith('http')) {
+        return true; // Assume network images exist
+      }
+      final file = File(Uri.parse(imageUrl).toFilePath());
+      return await file.exists();
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -331,34 +343,76 @@ class _AddEventScreenState extends State<AddEventScreen> {
               const SizedBox(height: AppConstants.spacingMedium),
               // Image Picker section
               if (_imageUrl != null)
-                Container(
-                  margin: const EdgeInsets.only(bottom: AppConstants.spacingMedium),
-                  height: 200,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-                    child: Image.file(
-                      File(_imageUrl!),
-                      fit: BoxFit.cover, 
-                      width: double.infinity,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 200,
-                          width: double.infinity,
+                FutureBuilder<bool>(
+                  future: _checkImageExists(_imageUrl!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: AppConstants.spacingMedium),
+                        height: 200,
+                        decoration: BoxDecoration(
                           color: Colors.grey[300],
-                          child: const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text('Failed to load image', style: TextStyle(color: Colors.grey)),
-                              ],
-                            ),
+                          borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    
+                    final imageExists = snapshot.data ?? false;
+                    
+                    if (!imageExists) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: AppConstants.spacingMedium),
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text('Image not found', style: TextStyle(color: Colors.grey)),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+                      );
+                    }
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppConstants.spacingMedium),
+                      height: 200,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+                        child: Image.file(
+                          File(_imageUrl!),
+                          fit: BoxFit.cover, 
+                          width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              width: double.infinity,
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                    SizedBox(height: 8),
+                                    Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
                 ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -99,15 +99,15 @@ class HomeScreenState extends State<HomeScreen> {
     tempEvents.sort((a, b) {
       switch (_sortOption) {
         case 'date_asc':
-          return a.date.compareTo(b.date);
+        return a.date.compareTo(b.date);
         case 'date_desc':
-          return b.date.compareTo(a.date);
+        return b.date.compareTo(a.date);
         case 'title_asc':
-          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        return a.title.toLowerCase().compareTo(b.title.toLowerCase());
         case 'title_desc':
-          return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+        return b.title.toLowerCase().compareTo(a.title.toLowerCase());
         default:
-          return 0;
+      return 0;
       }
     });
 
@@ -566,9 +566,9 @@ class HomeScreenState extends State<HomeScreen> {
                             event: event,
                             onToggleFavorite: () async {
                               await _storageService.toggleFavoriteStatus(
-                                event.id,
-                                !event.isFavorite,
-                              );
+                                              event.id,
+                                              !event.isFavorite,
+                                            );
                               loadEvents();
                             },
                             onShare: () => _shareEvent(event),
@@ -787,6 +787,7 @@ class _SafeImageWidget extends StatefulWidget {
 class _SafeImageWidgetState extends State<_SafeImageWidget> {
   bool _fileExists = true;
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -794,11 +795,20 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
     _checkFileExists();
   }
 
+  @override
+  void didUpdateWidget(_SafeImageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _checkFileExists();
+    }
+  }
+
   Future<void> _checkFileExists() async {
     if (widget.imageUrl.startsWith('http')) {
       setState(() {
         _isLoading = false;
         _fileExists = true;
+        _hasError = false;
       });
       return;
     }
@@ -809,11 +819,22 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
       setState(() {
         _fileExists = exists;
         _isLoading = false;
+        _hasError = false;
       });
     } catch (e) {
       setState(() {
         _fileExists = false;
         _isLoading = false;
+        _hasError = true;
+      });
+    }
+  }
+
+  void _handleImageError() {
+    if (mounted) {
+      setState(() {
+        _hasError = true;
+        _fileExists = false;
       });
     }
   }
@@ -834,7 +855,7 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
       );
     }
 
-    if (!_fileExists) {
+    if (!_fileExists || _hasError) {
       return Container(
         height: 150,
         width: double.infinity,
@@ -842,13 +863,27 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
           color: Colors.grey[300],
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.broken_image, size: 48, color: Colors.grey),
-              SizedBox(height: 8),
-              Text('Image not found', style: TextStyle(color: Colors.grey)),
+              const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+              const SizedBox(height: 8),
+              Text(
+                _hasError ? 'Image error' : 'Image not found',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _hasError = false;
+                  });
+                  _checkFileExists();
+                },
+                child: const Text('Retry', style: TextStyle(fontSize: 12)),
+              ),
             ],
           ),
         ),
@@ -865,17 +900,29 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
+                _handleImageError();
                 return Container(
                   height: 150,
                   width: double.infinity,
                   color: Colors.grey[300],
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                        const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                        const SizedBox(height: 8),
+                        const Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                              _hasError = false;
+                            });
+                            _checkFileExists();
+                          },
+                          child: const Text('Retry', style: TextStyle(fontSize: 12)),
+                        ),
                       ],
                     ),
                   ),
@@ -888,17 +935,29 @@ class _SafeImageWidgetState extends State<_SafeImageWidget> {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
+                _handleImageError();
                 return Container(
                   height: 150,
                   width: double.infinity,
                   color: Colors.grey[300],
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                        const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                        const SizedBox(height: 8),
+                        const Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                              _hasError = false;
+                            });
+                            _checkFileExists();
+                          },
+                          child: const Text('Retry', style: TextStyle(fontSize: 12)),
+                        ),
                       ],
                     ),
                   ),
